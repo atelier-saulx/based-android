@@ -1,0 +1,19 @@
+image: registry.gitlab.com/airhub/ops/basedbaseimages/gradle-jdk11:665a1470fda98d801d39608d30bc86df7c77fdbe
+
+stages:
+  - test
+  - publish
+
+publish:
+  stage: publish
+  script:
+    - gradle publish
+
+test:
+  stage: test
+  script:
+    - gradle test
+  artifacts:
+    paths:
+      - core/build/reports/tests
+    when: always
