@@ -1,15 +1,15 @@
 allprojects {
-    group = "com.saulx.based-client"
-    version = "0.0.5"
+    group = "com.saulx.based-android-client"
+    version = "0.0.2"
 
     repositories {
         mavenLocal()
         mavenCentral()
         maven {
-            url = uri("https://archiva.devtools.airhub.app/repository/internal/")
+            url = uri("https://maven.pkg.github.com/atelier-saulx/based-android")
             credentials {
-                username = System.getenv("AIRHUB_ARCHIVA_USERNAME")
-                password = System.getenv("AIRHUB_ARCHIVA_PASSWORD")
+                username = System.getenv("BASED_ANDROID_USERNAME")
+                password = System.getenv("BASED_ANDROID_KEY")
             }
         }
     }
