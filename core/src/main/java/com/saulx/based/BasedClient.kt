@@ -50,7 +50,7 @@ class BasedClient : DisposableHandle {
         return withContext(Dispatchers.IO) {
             suspendCoroutine {
                 println("auth: sending $objState")
-                libraryInstance.Based__auth(clientId, objState, object : BasedLibrary.AuthCallback {
+                libraryInstance.Based__set_auth_state(clientId, objState, object : BasedLibrary.AuthCallback {
                     override fun invoke(data: String) {
                         println("auth :: callback data '$data'")
                         authState = state
@@ -81,7 +81,7 @@ class BasedClient : DisposableHandle {
     suspend fun function(name: String, payload: String): String {
         return suspendCoroutine {
             println("$name :: sending '$payload'")
-            libraryInstance.Based__function(clientId, name, payload, object :
+            libraryInstance.Based__call(clientId, name, payload, object :
                 BasedLibrary.GetCallback {
                 override fun invoke(data: String, error: String) {
                     println("$name :: callback data '$data'. Error '$error'")
@@ -163,7 +163,7 @@ class BasedClient : DisposableHandle {
 
     suspend fun set(payload: String): String {
         return suspendCoroutine {
-            libraryInstance.Based__function(clientId, "based-db-set", payload, object:
+            libraryInstance.Based__call(clientId, "based-db-set", payload, object:
                 BasedLibrary.GetCallback {
                 override fun invoke(data: String, error: String) {
                     if (error.isEmpty()) {
@@ -180,7 +180,7 @@ class BasedClient : DisposableHandle {
         return withContext(Dispatchers.IO) {
             logger.info("get: $payload")
             suspendCoroutine {
-                libraryInstance.Based__function(clientId, "based-db-get", payload, object :
+                libraryInstance.Based__call(clientId, "based-db-get", payload, object :
                     BasedLibrary.GetCallback {
                     override fun invoke(data: String, error: String) {
                         if (error.isEmpty()) {
