@@ -155,8 +155,8 @@ class BasedClient : DisposableHandle {
 
     suspend fun file(fileOptions: FileUploadOptions): String? {
         return connectionInfo?.let {
-            val serverUrl = libraryInstance.Based__get_service(clientId, clusterUrl, it.org, it.project, it.env, "@based/edge", "", false)
-            val targetUrl = "${serverUrl}/based-db-file-upload"
+            val serverUrl = libraryInstance.Based__get_service(clientId, clusterUrl, it.org, it.project, it.env, "@based/env-hub", "", false)
+            val targetUrl = "${serverUrl}/db:file-upload"
             FileUploader.upload(fileOptions, targetUrl, authState ?: "")
         }
     }
