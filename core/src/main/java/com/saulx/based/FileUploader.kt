@@ -23,12 +23,11 @@ object FileUploader {
             is ReferenceFileOptions -> return null
         }
 
-        val authHeader = """
-            {"token":"$auth"}
-        """.trimIndent().let {
+        val authHeader = auth.trimIndent().let {
             URLEncoder.encode(it, "UTF-8")
         }
 
+        println("Start coroutine")
         return suspendCoroutine { continuation ->
             val httpClient = OkHttpClient.Builder()
                 .build()
@@ -41,13 +40,13 @@ object FileUploader {
                 .post(requestBody)
                 .build()
             request.headers.forEach {
-                logger.info("Request header: ${it.first} -> ${it.second}")
+                println("Request header: ${it.first} -> ${it.second}")
             }
             httpClient.newCall(request).execute().use {
-                logger.info("Upload call to $url completed ${it.code}")
+                println("Upload call to $url completed ${it.code}")
                 val fileId = it.body?.let { body ->
                     val responseString = body.string()
-                    logger.info("Response from $url: \"$responseString\"")
+                    println("Response from $url: \"$responseString\"")
                     responseString
                 }
                 it.close()

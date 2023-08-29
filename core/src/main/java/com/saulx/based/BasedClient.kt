@@ -26,7 +26,7 @@ class BasedClient : DisposableHandle {
     }
 
     private val clientId = libraryInstance.Based__new_client()
-    private val clusterUrl = "https://d15p61sp2f2oaj.cloudfront.net/"
+    private val clusterUrl = "production"
     private val logger = LoggerFactory.getLogger(this::class.java)
     private var connectionInfo: ConnectionInfo? = null
     private var authState: String? = null
@@ -50,7 +50,7 @@ class BasedClient : DisposableHandle {
         return withContext(Dispatchers.IO) {
             suspendCoroutine {
                 println("auth: sending $objState")
-                libraryInstance.Based__auth(clientId, objState, object : BasedLibrary.AuthCallback {
+                libraryInstance.Based__set_auth_state(clientId, objState, object : BasedLibrary.AuthCallback {
                     override fun invoke(data: String) {
                         println("auth :: callback data '$data'")
                         authState = state
@@ -81,7 +81,7 @@ class BasedClient : DisposableHandle {
     suspend fun function(name: String, payload: String): String {
         return suspendCoroutine {
             println("$name :: sending '$payload'")
-            libraryInstance.Based__function(clientId, name, payload, object :
+            libraryInstance.Based__call(clientId, name, payload, object :
                 BasedLibrary.GetCallback {
                 override fun invoke(data: String, error: String) {
                     println("$name :: callback data '$data'. Error '$error'")
@@ -108,7 +108,7 @@ class BasedClient : DisposableHandle {
         org: String,
         project: String,
         env: String,
-        name: String = "@based/edge",
+        name: String = "@based/env-hub",
         key: String = "",
         optional_key: Boolean = false
     ) {
@@ -154,16 +154,18 @@ class BasedClient : DisposableHandle {
     }
 
     suspend fun file(fileOptions: FileUploadOptions): String? {
+        println("Start creating the file: ${fileOptions.name}, $connectionInfo")
         return connectionInfo?.let {
-            val serverUrl = libraryInstance.Based__get_service(clientId, clusterUrl, it.org, it.project, it.env, "@based/edge", "", false)
-            val targetUrl = "${serverUrl}/based-db-file-upload"
+            val serverUrl = libraryInstance.Based__get_service(clientId, clusterUrl, it.org, it.project, it.env, "@based/env-hub", "", false)
+            val targetUrl = "${serverUrl}/db:file-upload"
+            println("Try to upload the file: $targetUrl")
             FileUploader.upload(fileOptions, targetUrl, authState ?: "")
         }
     }
 
     suspend fun set(payload: String): String {
         return suspendCoroutine {
-            libraryInstance.Based__function(clientId, "based-db-set", payload, object:
+            libraryInstance.Based__call(clientId, "based-db-set", payload, object:
                 BasedLibrary.GetCallback {
                 override fun invoke(data: String, error: String) {
                     if (error.isEmpty()) {
@@ -180,7 +182,7 @@ class BasedClient : DisposableHandle {
         return withContext(Dispatchers.IO) {
             logger.info("get: $payload")
             suspendCoroutine {
-                libraryInstance.Based__function(clientId, "based-db-get", payload, object :
+                libraryInstance.Based__call(clientId, "based-db-get", payload, object :
                     BasedLibrary.GetCallback {
                     override fun invoke(data: String, error: String) {
                         if (error.isEmpty()) {

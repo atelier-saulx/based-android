@@ -54,7 +54,7 @@ internal interface BasedLibrary: Library {
     fun Based__get(client_id: Int, name: String, payload: String, cb: GetCallback)
 
     fun Based__unobserve(client_id: Int, sub_id: Int)
-    fun Based__function(client_id: Int, name: String, payload: String, cb: GetCallback)
+    fun Based__call(client_id: Int, name: String, payload: String, cb: GetCallback)
 
-    fun Based__auth(client_id: Int, state: String, cb: AuthCallback)
+    fun Based__set_auth_state(client_id: Int, state: String, cb: AuthCallback)
 }
