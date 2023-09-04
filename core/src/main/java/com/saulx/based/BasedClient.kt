@@ -53,7 +53,7 @@ class BasedClient : DisposableHandle {
                 libraryInstance.Based__set_auth_state(clientId, objState, object : BasedLibrary.AuthCallback {
                     override fun invoke(data: String) {
                         println("auth :: callback data '$data'")
-                        authState = state
+                        authState = objState
                         it.resume(data)
                     }
                 })
@@ -154,7 +154,7 @@ class BasedClient : DisposableHandle {
     }
 
     suspend fun file(fileOptions: FileUploadOptions): String? {
-        println("Start creating the file: ${fileOptions.name}, $connectionInfo")
+        println("Start creating the file: ${fileOptions.fileName}, $connectionInfo")
         return connectionInfo?.let {
             val serverUrl = libraryInstance.Based__get_service(clientId, clusterUrl, it.org, it.project, it.env, "@based/env-hub", "", false)
             val targetUrl = "${serverUrl}/db:file-upload"

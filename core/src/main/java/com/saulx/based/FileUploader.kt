@@ -1,44 +1,47 @@
 package com.saulx.based
 
-import com.saulx.based.model.*
+import com.saulx.based.model.CustomFileUploadOptions
+import com.saulx.based.model.FileFileUploadOptions
+import com.saulx.based.model.FileUploadOptions
+import com.saulx.based.model.StringFileUploadOptions
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
-import org.slf4j.LoggerFactory
-import java.net.URLEncoder
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 object FileUploader {
 
-    private val logger = LoggerFactory.getLogger(this::class.java)
-
     suspend fun upload(fileUploadOptions: FileUploadOptions, url: String, auth: String): String? {
 
-        val requestBody = when(fileUploadOptions) {
+        val requestBody = when (fileUploadOptions) {
             is StringFileUploadOptions -> fileUploadOptions.contents.toRequestBody()
             is FileFileUploadOptions -> fileUploadOptions.file.asRequestBody()
             is CustomFileUploadOptions -> fileUploadOptions.toRequestBody()
-            is ReferenceFileOptions -> return null
         }
 
-        val authHeader = auth.trimIndent().let {
-            URLEncoder.encode(it, "UTF-8")
-        }
+        val size = requestBody.contentLength()
 
         println("Start coroutine")
         return suspendCoroutine { continuation ->
             val httpClient = OkHttpClient.Builder()
                 .build()
-            val request = Request.Builder()
-                .url(url)
+            val requestBuilder = Request.Builder().url(url)
                 .addHeader("Req-Type", "blob")
-                .addHeader("Content-Type", fileUploadOptions.mimeType ?: "text/plain")
-                .addHeader("JSON-Authorization", authHeader)
+                .addHeader("JSON-Authorization", auth)
                 .addHeader("Transfer-Encoding", "chunked")
+                .addHeader("Content-Type", fileUploadOptions.mimeType ?: "text/plain")
+                .addHeader("Content-Length", size.toString())
                 .post(requestBody)
-                .build()
+
+            if (!fileUploadOptions.fileName.isNullOrEmpty()) {
+                requestBuilder.addHeader("Content-Name", fileUploadOptions.fileName!!)
+            }
+            if (fileUploadOptions.mimeType.isNullOrEmpty() && !fileUploadOptions.extension.isNullOrEmpty()) {
+                requestBuilder.addHeader("Content-Extension", fileUploadOptions.extension!!)
+            }
+            val request = requestBuilder.build()
             request.headers.forEach {
                 println("Request header: ${it.first} -> ${it.second}")
             }
@@ -50,6 +53,7 @@ object FileUploader {
                     responseString
                 }
                 it.close()
+
                 continuation.resume(if (it.code == 200) fileId else null)
             }
         }

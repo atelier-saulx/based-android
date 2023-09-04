@@ -4,22 +4,39 @@ import okhttp3.RequestBody
 import java.io.File
 
 sealed class FileUploadOptions(
+    var payload: Any?,
     var mimeType: String? = null,
-    var src: String? = null, //url
-    var name: String? = null,
-    var id: String? = null,
-    var url: String? = null //todo (() => Promise<String>)???
+    var fileName: String? = null,
+    var serverKey: String? = null,
+    var extension: String? = null
 )
 
-class ReferenceFileOptions(src: String, name: String?): FileUploadOptions(null, src, name, null, null)
+class StringFileUploadOptions(
+    payload: Any?,
+    mimeType: String? = null,
+    serverKey: String? = null,
+    extension: String? = null,
+    var contents: String
+) :
+    FileUploadOptions(payload,  mimeType, null, serverKey, extension)
 
-class StringFileUploadOptions(mimeType: String? = null, src: String? = null, name: String? = null, id: String? = null, url: String? = null, var contents: String):
-    FileUploadOptions(mimeType, src, name, id, url)
+class FileFileUploadOptions(
+    payload: Any?,
+    mimeType: String? = null,
+    fileName: String? = null,
+    serverKey: String? = null,
+    extension: String? = null,
+    var file: File
+) :
+    FileUploadOptions(payload,  mimeType, fileName, serverKey, extension)
 
-class FileFileUploadOptions(mimeType: String? = null, src: String? = null, name: String? = null, id: String? = null, url: String? = null, var file: File):
-    FileUploadOptions(mimeType, src, name, id, url)
-
-abstract class CustomFileUploadOptions(mimeType: String? = null, src: String? = null, name: String? = null, id: String? = null, url: String? = null): FileUploadOptions(mimeType, src, name, id, url) {
+abstract class CustomFileUploadOptions(
+    payload: Any?,
+    mimeType: String? = null,
+    fileName: String? = null,
+    serverKey: String? = null,
+    extension: String? = null,
+) : FileUploadOptions(payload,  mimeType, fileName, serverKey, extension) {
 
     abstract fun toRequestBody(): RequestBody
 }
