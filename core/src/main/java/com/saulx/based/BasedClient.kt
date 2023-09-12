@@ -1,5 +1,7 @@
 package com.saulx.based
 
+import com.saulx.based.model.AuthState
+import com.saulx.based.model.FileUploadOptions
 import com.sun.jna.Native
 import com.sun.jna.NativeLong
 import kotlinx.coroutines.Dispatchers
@@ -10,10 +12,7 @@ import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.withContext
-import com.saulx.based.model.AuthState
-import com.saulx.based.model.FileUploadOptions
 import org.slf4j.LoggerFactory
-import java.util.logging.Logger
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -50,13 +49,16 @@ class BasedClient : DisposableHandle {
         return withContext(Dispatchers.IO) {
             suspendCoroutine {
                 println("auth: sending $objState")
-                libraryInstance.Based__set_auth_state(clientId, objState, object : BasedLibrary.AuthCallback {
-                    override fun invoke(data: String) {
-                        println("auth :: callback data '$data'")
-                        authState = objState
-                        it.resume(data)
-                    }
-                })
+                libraryInstance.Based__set_auth_state(
+                    clientId,
+                    objState,
+                    object : BasedLibrary.AuthCallback {
+                        override fun invoke(data: String) {
+                            println("auth :: callback data '$data'")
+                            authState = objState
+                            it.resume(data)
+                        }
+                    })
             }
         }
     }
@@ -113,25 +115,41 @@ class BasedClient : DisposableHandle {
         optional_key: Boolean = false
     ) {
         this.connectionInfo = ConnectionInfo(org, project, env)
-        libraryInstance.Based__connect(clientId, cluster, org, project, env, name, key, optional_key)
+        libraryInstance.Based__connect(
+            clientId,
+            cluster,
+            org,
+            project,
+            env,
+            name,
+            key,
+            optional_key
+        )
     }
 
     fun observe(name: String, payload: String): Flow<String> {
         return callbackFlow {
             println("$name :: sending '$payload'")
-            val observerId =
-                libraryInstance.Based__observe(clientId, name, payload, object :
-                    BasedLibrary.ObserveCallback {
-                    override fun invoke(data: String, checksum: NativeLong, error: String) {
-                        if (error.isEmpty()) {
-                            trySendBlocking(data)
-                        } else {
-                            throw RuntimeException(error)
-                        }
-
+            val callback = object :
+                BasedLibrary.ObserveCallback {
+                override fun invoke(data: String, checksum: NativeLong, error: String, subId: Int) {
+                    println("Trigger observe $data, checksum: $checksum")
+                    if (error.isEmpty()) {
+                        trySendBlocking(data)
+                    } else {
+                        println("got exception: $error")
+                        throw RuntimeException(error)
                     }
-                })
-            awaitClose { unobserve(observerId) }
+
+                }
+            }
+            val observerId =
+                libraryInstance.Based__observe(clientId, name, payload, callback)
+            println("$name :: obs id = $observerId")
+            awaitClose {
+                println("unobserve it $name with payload $payload")
+                unobserve(observerId)
+            }
         }
     }
 
@@ -140,7 +158,12 @@ class BasedClient : DisposableHandle {
             val observerId =
                 libraryInstance.Based__observe(clientId, "based-db-observe", payload, object :
                     BasedLibrary.ObserveCallback {
-                    override fun invoke(data: String, checksum: NativeLong, error: String) {
+                    override fun invoke(
+                        data: String,
+                        checksum: NativeLong,
+                        error: String,
+                        subId: Int
+                    ) {
                         if (error.isEmpty()) {
                             trySendBlocking(data)
                         } else {
@@ -156,7 +179,16 @@ class BasedClient : DisposableHandle {
     suspend fun file(fileOptions: FileUploadOptions): String? {
         println("Start creating the file: ${fileOptions.fileName}, $connectionInfo")
         return connectionInfo?.let {
-            val serverUrl = libraryInstance.Based__get_service(clientId, clusterUrl, it.org, it.project, it.env, "@based/env-hub", "", false)
+            val serverUrl = libraryInstance.Based__get_service(
+                clientId,
+                clusterUrl,
+                it.org,
+                it.project,
+                it.env,
+                "@based/env-hub",
+                "",
+                false
+            )
             val targetUrl = "${serverUrl}/db:file-upload"
             println("Try to upload the file: $targetUrl")
             FileUploader.upload(fileOptions, targetUrl, authState ?: "")
@@ -165,7 +197,7 @@ class BasedClient : DisposableHandle {
 
     suspend fun set(payload: String): String {
         return suspendCoroutine {
-            libraryInstance.Based__call(clientId, "based-db-set", payload, object:
+            libraryInstance.Based__call(clientId, "based-db-set", payload, object :
                 BasedLibrary.GetCallback {
                 override fun invoke(data: String, error: String) {
                     if (error.isEmpty()) {

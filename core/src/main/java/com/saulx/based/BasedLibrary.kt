@@ -7,7 +7,7 @@ import com.sun.jna.NativeLong
 internal interface BasedLibrary: Library {
 
     interface ObserveCallback: Callback {
-        fun invoke(data: String, checksum: NativeLong, error: String)
+        fun invoke(data: String, checksum: NativeLong, error: String, subId: Int)
     }
 
     interface GetCallback: Callback {
