@@ -2,13 +2,16 @@ package com.saulx.based
 
 import com.saulx.based.model.AuthState
 import com.saulx.based.model.FileUploadOptions
+import com.sun.jna.Library.Handler
 import com.sun.jna.Native
 import com.sun.jna.NativeLong
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.DisposableHandle
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.channels.trySendBlocking
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.withContext
@@ -128,14 +131,19 @@ class BasedClient : DisposableHandle {
     }
 
     fun observe(name: String, payload: String): Flow<String> {
+        var callback: BasedLibrary.ObserveCallback
         return callbackFlow {
             println("$name :: sending '$payload'")
-            val callback = object :
+            callback = object :
                 BasedLibrary.ObserveCallback {
-                override fun invoke(data: String, checksum: NativeLong, error: String, subId: Int) {
-                    println("Trigger observe $data, checksum: $checksum")
+                override fun invoke(
+                    data: String,
+                    checksum: NativeLong,
+                    error: String,
+                    subId: Int
+                ) {
                     if (error.isEmpty()) {
-                        trySendBlocking(data)
+                        trySend(data)
                     } else {
                         println("got exception: $error")
                         throw RuntimeException(error)
@@ -143,12 +151,12 @@ class BasedClient : DisposableHandle {
 
                 }
             }
-            val observerId =
-                libraryInstance.Based__observe(clientId, name, payload, callback)
-            println("$name :: obs id = $observerId")
+
+            val observerId: Int = libraryInstance.Based__observe(clientId, name, payload, callback)
+
             awaitClose {
-                println("unobserve it $name with payload $payload")
                 unobserve(observerId)
+                cancel()
             }
         }
     }
@@ -187,7 +195,8 @@ class BasedClient : DisposableHandle {
                 it.env,
                 "@based/env-hub",
                 "",
-                false
+                false,
+                html = true
             )
             val targetUrl = "${serverUrl}/db:file-upload"
             println("Try to upload the file: $targetUrl")

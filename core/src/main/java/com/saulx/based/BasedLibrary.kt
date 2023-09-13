@@ -33,7 +33,8 @@ internal interface BasedLibrary: Library {
         env: String,
         name: String,
         key: String,
-        optional_key: Boolean
+        optional_key: Boolean,
+        html: Boolean
     ): String
 
     fun Based__connect_to_url(client_id: Int, url: String)
