@@ -14,7 +14,7 @@ import kotlin.coroutines.suspendCoroutine
 object FileUploader {
 
     suspend fun upload(fileUploadOptions: FileUploadOptions, url: String, auth: String): String? {
-
+        var finalUrl = url
         val requestBody = when (fileUploadOptions) {
             is StringFileUploadOptions -> fileUploadOptions.contents.toRequestBody()
             is FileFileUploadOptions -> fileUploadOptions.file.asRequestBody()
@@ -23,11 +23,15 @@ object FileUploader {
 
         val size = requestBody.contentLength()
 
-        println("Start coroutine")
+        if(fileUploadOptions.payload?.isNotEmpty() == true){
+            finalUrl += "?${fileUploadOptions.payload}"
+        }
+
+        println("Start coroutine at $finalUrl")
         return suspendCoroutine { continuation ->
             val httpClient = OkHttpClient.Builder()
                 .build()
-            val requestBuilder = Request.Builder().url(url)
+            val requestBuilder = Request.Builder().url(finalUrl)
                 .addHeader("Req-Type", "blob")
                 .addHeader("JSON-Authorization", auth)
                 .addHeader("Transfer-Encoding", "chunked")
@@ -46,10 +50,10 @@ object FileUploader {
                 println("Request header: ${it.first} -> ${it.second}")
             }
             httpClient.newCall(request).execute().use {
-                println("Upload call to $url completed ${it.code}")
+                println("Upload call to $finalUrl completed ${it.code}")
                 val fileId = it.body?.let { body ->
                     val responseString = body.string()
-                    println("Response from $url: \"$responseString\"")
+                    println("Response from $finalUrl: \"$responseString\"")
                     responseString
                 }
                 it.close()

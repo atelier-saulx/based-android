@@ -26,26 +26,6 @@ suspend fun <T> BasedClient.get(name: String, payload: Any?, returnType: Class<T
 }
 
 @ExperimentalCoroutinesApi
-suspend fun BasedClient.get(payload: JsonElement?): JsonElement {
-    return gson.fromJson(this.get(payload?.let { gson.toJson(payload) } ?: ""), JsonElement::class.java)
-}
-
-@ExperimentalCoroutinesApi
-suspend fun <T> BasedClient.get(payload: Any?, returnType: Class<T>): T {
-    return gson.fromJson(this.get(payload?.let { gson.toJson(payload) } ?: ""), returnType)
-}
-
-@ExperimentalCoroutinesApi
-suspend fun BasedClient.set(payload: JsonElement?): JsonElement {
-    return gson.fromJson(this.set(payload?.let { gson.toJson(payload) } ?: ""), JsonElement::class.java)
-}
-
-@ExperimentalCoroutinesApi
-suspend fun <T> BasedClient.set(payload: Any?, returnType: Class<T>): T {
-    return gson.fromJson(this.set(payload?.let { gson.toJson(payload) } ?: ""), returnType)
-}
-
-@ExperimentalCoroutinesApi
 suspend fun BasedClient.function(name: String, payload: JsonElement?): JsonElement {
     return gson.fromJson(this.function(name, payload?.let { gson.toJson(payload) } ?: ""), JsonElement::class.java)
 }
@@ -64,17 +44,5 @@ fun BasedClient.observe(name: String, payload: JsonElement?): Flow<JsonElement> 
 @ExperimentalCoroutinesApi
 fun <T> BasedClient.observe(name: String, payload: Any?, returnType: Class<T>): Flow<T> {
     return this.observe(name, payload?.let { gson.toJson(payload) } ?: "")
-        .map { gson.fromJson(it, returnType) }
-}
-
-@ExperimentalCoroutinesApi
-fun BasedClient.observe(payload: JsonElement?): Flow<JsonElement> {
-    return this.observe( payload?.let { gson.toJson(payload) } ?: "")
-        .map { gson.fromJson(it, JsonElement::class.java) }
-}
-
-@ExperimentalCoroutinesApi
-fun <T> BasedClient.observe(payload: Any?, returnType: Class<T>): Flow<T> {
-    return this.observe( payload?.let { gson.toJson(payload) } ?: "")
         .map { gson.fromJson(it, returnType) }
 }

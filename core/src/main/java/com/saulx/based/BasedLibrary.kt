@@ -52,10 +52,10 @@ internal interface BasedLibrary: Library {
     fun Based__disconnect(client_id: Int)
     fun Based__observe(client_id: Int, name: String, payload: String, cb: ObserveCallback): Int
 
-    fun Based__get(client_id: Int, name: String, payload: String, cb: GetCallback)
+    fun Based__get(client_id: Int, name: String, payload: String, cb: GetCallback): Int
 
     fun Based__unobserve(client_id: Int, sub_id: Int)
-    fun Based__call(client_id: Int, name: String, payload: String, cb: GetCallback)
+    fun Based__call(client_id: Int, name: String, payload: String, cb: GetCallback): Int
 
-    fun Based__set_auth_state(client_id: Int, state: String, cb: AuthCallback)
+    fun Based__set_auth_state(client_id: Int, state: String, cb: AuthCallback): Int
 }

@@ -4,7 +4,7 @@ import okhttp3.RequestBody
 import java.io.File
 
 sealed class FileUploadOptions(
-    var payload: Any?,
+    var payload: String?,
     var mimeType: String? = null,
     var fileName: String? = null,
     var serverKey: String? = null,
@@ -12,7 +12,7 @@ sealed class FileUploadOptions(
 )
 
 class StringFileUploadOptions(
-    payload: Any?,
+    payload: String?,
     mimeType: String? = null,
     serverKey: String? = null,
     extension: String? = null,
@@ -21,7 +21,7 @@ class StringFileUploadOptions(
     FileUploadOptions(payload,  mimeType, null, serverKey, extension)
 
 class FileFileUploadOptions(
-    payload: Any?,
+    payload: String?,
     mimeType: String? = null,
     fileName: String? = null,
     serverKey: String? = null,
@@ -31,7 +31,7 @@ class FileFileUploadOptions(
     FileUploadOptions(payload,  mimeType, fileName, serverKey, extension)
 
 abstract class CustomFileUploadOptions(
-    payload: Any?,
+    payload: String?,
     mimeType: String? = null,
     fileName: String? = null,
     serverKey: String? = null,

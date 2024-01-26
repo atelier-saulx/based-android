@@ -37,7 +37,7 @@ publishing {
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.1")
-    implementation("net.java.dev.jna:jna:5.12.1")
+    implementation("net.java.dev.jna:jna:5.13.0")
     implementation("org.slf4j:slf4j-api:1.7.30")
     testImplementation("org.slf4j:slf4j-simple:1.7.30")
 
