@@ -47,7 +47,7 @@ class BasedClient : DisposableHandle {
                     object : BasedLibrary.AuthCallback {
                         override fun invoke(data: String) {
                             println("auth :: callback data '$data'")
-                            authState = objState
+                            authState = state
                             it.resume(data)
                         }
                     }

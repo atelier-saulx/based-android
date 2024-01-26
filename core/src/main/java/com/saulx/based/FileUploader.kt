@@ -33,7 +33,7 @@ object FileUploader {
                 .build()
             val requestBuilder = Request.Builder().url(finalUrl)
                 .addHeader("Req-Type", "blob")
-                .addHeader("JSON-Authorization", auth)
+                .addHeader("JSON-Authorization", """{ "token": "$auth" }""")
                 .addHeader("Transfer-Encoding", "chunked")
                 .addHeader("Content-Type", fileUploadOptions.mimeType ?: "text/plain")
                 .addHeader("Content-Length", size.toString())
