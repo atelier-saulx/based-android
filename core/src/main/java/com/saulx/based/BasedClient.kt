@@ -19,12 +19,12 @@ import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
 @ExperimentalCoroutinesApi
-class BasedClient : DisposableHandle {
+class BasedClient(private val enableTLS: Boolean = false) : DisposableHandle {
 
     private val getMap: HashMap<Int, BasedLibrary.GetCallback> = HashMap()
     private val functionMap: HashMap<Int, BasedLibrary.GetCallback> = HashMap()
 
-    private val clientId = libraryInstance.Based__new_client()
+    private val clientId = libraryInstance.Based__new_client(enableTLS)
     private val clusterUrl = "production"
     private val logger = LoggerFactory.getLogger(this::class.java)
     private var connectionInfo: ConnectionInfo? = null
@@ -129,8 +129,11 @@ class BasedClient : DisposableHandle {
         env: String,
         name: String = "@based/env-hub",
         key: String = "",
-        optional_key: Boolean = false
+        optional_key: Boolean = false,
+        host: String = "",
+        discoverUrl: String = ""
     ) {
+        println("Based__connect with: org:$org, project:$project, env:$env, name:$name, discoverUrl:$discoverUrl, TLS:$enableTLS")
         this.connectionInfo = ConnectionInfo(org, project, env)
         libraryInstance.Based__connect(
             clientId,
@@ -140,7 +143,9 @@ class BasedClient : DisposableHandle {
             env,
             name,
             key,
-            optional_key
+            optional_key,
+            host,
+            discoverUrl
         )
     }
 

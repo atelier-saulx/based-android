@@ -22,7 +22,7 @@ internal interface BasedLibrary: Library {
         fun invoke(data: Int)
     }
 
-    fun Based__new_client(): Int
+    fun Based__new_client(enableTLS: Boolean = false): Int
     fun Based__delete_client(client_id: Int)
 
     fun Based__get_service(
@@ -46,7 +46,9 @@ internal interface BasedLibrary: Library {
         env: String,
         name: String,
         key: String,
-        optional_key: Boolean
+        optional_key: Boolean,
+        host: String,
+        discover_url: String
     )
 
     fun Based__disconnect(client_id: Int)
@@ -58,4 +60,6 @@ internal interface BasedLibrary: Library {
     fun Based__call(client_id: Int, name: String, payload: String, cb: GetCallback): Int
 
     fun Based__set_auth_state(client_id: Int, state: String, cb: AuthCallback): Int
+
+    fun Based__get_auth_state(client_id: Int, state: String, cb: AuthCallback): Int
 }
