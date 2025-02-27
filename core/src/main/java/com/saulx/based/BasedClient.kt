@@ -1,5 +1,10 @@
+@file:Suppress("LocalVariableName")
+
 package com.saulx.based
 
+import com.saulx.based.exceptions.CallbackException
+import com.saulx.based.extensions.logDataResponse
+import com.saulx.based.extensions.logPayload
 import com.saulx.based.model.AuthState
 import com.saulx.based.model.FileUploadOptions
 import com.sun.jna.CallbackThreadInitializer
@@ -14,6 +19,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -21,8 +27,8 @@ import kotlin.coroutines.suspendCoroutine
 @ExperimentalCoroutinesApi
 class BasedClient(private val enableTLS: Boolean = false) : DisposableHandle {
 
-    private val getMap: HashMap<Int, BasedLibrary.GetCallback> = HashMap()
-    private val functionMap: HashMap<Int, BasedLibrary.GetCallback> = HashMap()
+    private val getMap: ConcurrentHashMap<Int, BasedLibrary.GetCallback> = ConcurrentHashMap()
+    private val functionMap: ConcurrentHashMap<Int, BasedLibrary.GetCallback> = ConcurrentHashMap()
 
     private val clientId = libraryInstance.Based__new_client(enableTLS)
     private val clusterUrl = "production"
@@ -42,11 +48,11 @@ class BasedClient(private val enableTLS: Boolean = false) : DisposableHandle {
         val objState = """{ "token": "$state" }"""
         return withContext(Dispatchers.IO) {
             suspendCoroutine {
-                println("auth: sending $objState")
+                logger.logPayload("auth", objState)
                 val callback =
                     object : BasedLibrary.AuthCallback {
                         override fun invoke(data: String) {
-                            println("auth :: callback data '$data'")
+                            logger.logDataResponse("auth", data)
                             authState = state
                             it.resume(data)
                         }
@@ -67,17 +73,17 @@ class BasedClient(private val enableTLS: Boolean = false) : DisposableHandle {
             var index = 0
             val callback = object : BasedLibrary.GetCallback {
                 override fun invoke(data: String, error: String) {
-                    println("$name :: callback data '$data'. Error '$error'")
                     getMap.remove(index)
                     if (error.isEmpty()) {
                         it.resume(data)
                     } else {
-                        it.resumeWithException(RuntimeException(error))
+                        it.resumeWithException(CallbackException("Error occurred in $name callback: $error"))
                     }
+                    logger.logDataResponse(name, data)
                 }
             }
             Native.setCallbackThreadInitializer(callback, callbackInitializer)
-            println("$name :: sending '$payload'")
+            logger.logPayload(name, payload)
             index = (Native.synchronizedLibrary(libraryInstance) as BasedLibrary).Based__get(
                 clientId,
                 name,
@@ -94,16 +100,17 @@ class BasedClient(private val enableTLS: Boolean = false) : DisposableHandle {
             val callback = object :
                 BasedLibrary.GetCallback {
                 override fun invoke(data: String, error: String) {
-                    println("$name :: callback data '$data'. Error '$error'")
+                    functionMap.remove(index)
                     if (error.isEmpty()) {
                         it.resume(data)
                     } else {
-                        it.resumeWithException(RuntimeException(error))
+                        it.resumeWithException(CallbackException("Error occurred in $name callback: $error"))
                     }
+                    logger.logDataResponse(name, data)
                 }
             }
             Native.setCallbackThreadInitializer(callback, callbackInitializer)
-            println("$name :: sending '$payload'")
+            logger.logPayload(name, payload)
             index = (Native.synchronizedLibrary(libraryInstance) as BasedLibrary).Based__call(
                 clientId,
                 name,
@@ -133,7 +140,7 @@ class BasedClient(private val enableTLS: Boolean = false) : DisposableHandle {
         host: String = "",
         discoverUrl: String = ""
     ) {
-        println("Based__connect with: org:$org, project:$project, env:$env, name:$name, discoverUrl:$discoverUrl, TLS:$enableTLS")
+        logger.debug("Based__connect with: org:$org, project:$project, env:$env, name:$name, discoverUrl:$discoverUrl, TLS:$enableTLS")
         this.connectionInfo = ConnectionInfo(org, project, env)
         libraryInstance.Based__connect(
             clientId,
@@ -152,7 +159,7 @@ class BasedClient(private val enableTLS: Boolean = false) : DisposableHandle {
     fun observe(name: String, payload: String): Flow<String> {
         var callback: BasedLibrary.ObserveCallback
         return callbackFlow {
-            println("$name :: sending '$payload'")
+            logger.logPayload(name, payload)
             callback = object :
                 BasedLibrary.ObserveCallback {
                 override fun invoke(
@@ -164,7 +171,7 @@ class BasedClient(private val enableTLS: Boolean = false) : DisposableHandle {
                     if (error.isEmpty()) {
                         trySend(data)
                     } else {
-                        println("got exception: $error")
+                        logger.error("got exception: $error")
                         throw RuntimeException(error)
                     }
 
@@ -180,8 +187,8 @@ class BasedClient(private val enableTLS: Boolean = false) : DisposableHandle {
         }
     }
 
-    suspend fun file(fileOptions: FileUploadOptions): String? {
-        println("Start creating the file: ${fileOptions.fileName}, $connectionInfo")
+    suspend fun file(fileOptions: FileUploadOptions): String {
+        logger.debug("Start creating the file: {}, {}", fileOptions.fileName, connectionInfo)
         return connectionInfo?.let {
             val serverUrl = libraryInstance.Based__get_service(
                 clientId,
@@ -195,8 +202,10 @@ class BasedClient(private val enableTLS: Boolean = false) : DisposableHandle {
                 html = true
             )
             val targetUrl = "${serverUrl}/upload-file"
-            println("Try to upload the file: $targetUrl")
+            logger.debug("Try to upload the file: $targetUrl")
             FileUploader.upload(fileOptions, targetUrl, authState ?: "")
+        } ?: run {
+            throw IllegalStateException("Connection info is null, cannot upload file.")
         }
     }
 

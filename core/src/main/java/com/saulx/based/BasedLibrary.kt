@@ -1,3 +1,5 @@
+@file:Suppress("LocalVariableName", "FunctionName")
+
 package com.saulx.based
 
 import com.sun.jna.Callback
