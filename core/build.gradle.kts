@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    val kotlinVersion = "1.6.0"
+    val kotlinVersion = "1.8.21"
     id("java")
     kotlin("jvm") version kotlinVersion
     id("maven-publish")
@@ -22,7 +22,7 @@ publishing {
         maven {
             url = uri("https://maven.pkg.github.com/atelier-saulx/based-android")
             credentials {
-                username = System.getenv("BASED_ANDROID_USERNAME")
+                username = "SteliosPapamichail"
                 password = System.getenv("BASED_ANDROID_KEY")
             }
         }
@@ -36,7 +36,7 @@ publishing {
 
 dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
     implementation("net.java.dev.jna:jna:5.13.0")
     implementation("org.slf4j:slf4j-api:1.7.30")
     testImplementation("org.slf4j:slf4j-simple:1.7.30")

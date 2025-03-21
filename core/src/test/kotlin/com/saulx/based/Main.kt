@@ -31,11 +31,11 @@ class CoreTest {
 
         println("file upload test")
         runBlocking {
-            client.get("{ \"\$id\": \"root\", \"children\": true }")
+            client.get("{ \"\$id\": \"root\", \"children\": true }", "")
         }
         val now = System.currentTimeMillis()
         runBlocking {
-            val url = client.file(FileFileUploadOptions(mimeType = "image/png", file = File("src/test/resources/sdkgeneratieflow.png")))
+            val url = client.file(FileFileUploadOptions(payload = "", file = File("")))
             val end = System.currentTimeMillis()
             println("service url $url in ${end - now}ms")
         }

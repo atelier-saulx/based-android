@@ -7,7 +7,9 @@ import com.saulx.based.BasedClient
 import com.saulx.based.model.ParseResult
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 
 private var gson = GsonBuilder().create()
 
@@ -46,6 +48,7 @@ fun BasedClient.observe(name: String, payload: JsonElement?): Flow<ParseResult<J
             try {
                 ParseResult.Success(gson.fromJson(json, JsonElement::class.java))
             } catch (e: Exception) {
+                e.printStackTrace()
                 ParseResult.Failure(e, json)
             }
         }
@@ -64,6 +67,7 @@ fun <T> BasedClient.observe(
             try {
                 ParseResult.Success(gson.fromJson(json, returnType))
             } catch (e: Exception) {
+                e.printStackTrace()
                 ParseResult.Failure(e, json)
             }
         }

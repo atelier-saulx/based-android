@@ -1,5 +1,3 @@
-@file:Suppress("LocalVariableName")
-
 package com.saulx.based
 
 import com.saulx.based.exceptions.CallbackException
@@ -12,8 +10,6 @@ import com.sun.jna.Native
 import com.sun.jna.NativeLong
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.DisposableHandle
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -24,7 +20,6 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
-@ExperimentalCoroutinesApi
 class BasedClient(private val enableTLS: Boolean = false) : DisposableHandle {
 
     private val getMap: ConcurrentHashMap<Int, BasedLibrary.GetCallback> = ConcurrentHashMap()
@@ -172,7 +167,6 @@ class BasedClient(private val enableTLS: Boolean = false) : DisposableHandle {
                         trySend(data)
                     } else {
                         logger.error("got exception: $error")
-                        throw RuntimeException(error)
                     }
 
                 }
@@ -182,7 +176,6 @@ class BasedClient(private val enableTLS: Boolean = false) : DisposableHandle {
 
             awaitClose {
                 unobserve(observerId)
-                cancel()
             }
         }
     }

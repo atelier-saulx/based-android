@@ -1,6 +1,6 @@
 allprojects {
     group = "com.saulx.based-android-client"
-    version = "0.0.68"
+    version = "0.1.0-beta-1"
 
     repositories {
         mavenLocal()
@@ -8,7 +8,7 @@ allprojects {
         maven {
             url = uri("https://maven.pkg.github.com/atelier-saulx/based-android")
             credentials {
-                username = System.getenv("BASED_ANDROID_USERNAME")
+                username = "SteliosPapamichail"
                 password = System.getenv("BASED_ANDROID_KEY")
             }
         }
