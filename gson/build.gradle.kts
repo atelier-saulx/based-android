@@ -11,8 +11,8 @@ plugins {
 
 //group = "nl.airhub.based-client"
 //version = "0.1-SNAPSHOT"
-java.sourceCompatibility = JavaVersion.VERSION_1_9
-java.targetCompatibility = JavaVersion.VERSION_1_9
+java.sourceCompatibility = JavaVersion.VERSION_11
+java.targetCompatibility = JavaVersion.VERSION_11
 
 java {
     withJavadocJar()
@@ -20,9 +20,16 @@ java {
 }
 
 publishing {
+    val gprBaseUrl = "https://maven.pkg.github.com"
+    val gprRepoOwner = "atelier-saulx"
+    val gprRepoId = "based-android"
+
+
+    // Add the GitHub Packages Repository to known repositories
     repositories {
         maven {
-            url = uri("https://maven.pkg.github.com/atelier-saulx/based-android")
+            name = "GitHubPackages"
+            url = uri("$gprBaseUrl/$gprRepoOwner/$gprRepoId")
             credentials {
                 username = System.getenv("BASED_ANDROID_USERNAME")
                 password = System.getenv("BASED_ANDROID_KEY")
@@ -30,8 +37,11 @@ publishing {
         }
     }
     publications {
-        register("mavenJava", MavenPublication::class) {
+        register("gprRelease", MavenPublication::class) {
             from(components["java"])
+            groupId = project.group.toString()
+            artifactId = project.name
+            version = project.version.toString()
         }
     }
 }
@@ -56,14 +66,10 @@ dependencies {
     dokkaHtmlPlugin("org.jetbrains.dokka:kotlin-as-java-plugin:1.7.20")
 }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
-}
-
 tasks.withType<KotlinCompile> {
     kotlinOptions {
         freeCompilerArgs = listOf("-Xjsr305=strict")
-        jvmTarget = "9"
+        jvmTarget = "11"
     }
 }
 
