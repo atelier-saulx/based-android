@@ -8,7 +8,7 @@ allprojects {
         maven {
             url = uri("https://maven.pkg.github.com/atelier-saulx/based-android")
             credentials {
-                username = "SteliosPapamichail"
+                username = System.getenv("BASED_ANDROID_USERNAME")
                 password = System.getenv("BASED_ANDROID_KEY")
             }
         }
