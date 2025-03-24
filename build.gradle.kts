@@ -1,6 +1,6 @@
 allprojects {
     group = "com.saulx.based-android-client"
-    version = "0.0.68"
+    version = "0.1.0-beta-1"
 
     repositories {
         mavenLocal()
