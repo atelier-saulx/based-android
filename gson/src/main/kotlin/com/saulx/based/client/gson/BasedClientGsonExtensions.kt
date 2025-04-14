@@ -4,12 +4,10 @@ import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonElement
 import com.saulx.based.BasedClient
-import com.saulx.based.model.ParseResult
+import com.saulx.based.exceptions.BasedClientParseException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.receiveAsFlow
 
 private var gson = GsonBuilder().create()
 
@@ -42,14 +40,14 @@ suspend fun <T> BasedClient.function(name: String, payload: Any?, returnType: Cl
 }
 
 @ExperimentalCoroutinesApi
-fun BasedClient.observe(name: String, payload: JsonElement?): Flow<ParseResult<JsonElement>> {
+fun BasedClient.observe(name: String, payload: JsonElement?): Flow<Result<JsonElement>> {
     return this.observe(name, payload?.let { gson.toJson(payload) } ?: "")
         .map { json ->
             try {
-                ParseResult.Success(gson.fromJson(json, JsonElement::class.java))
+                Result.success(gson.fromJson(json, JsonElement::class.java))
             } catch (e: Exception) {
                 e.printStackTrace()
-                ParseResult.Failure(e, json)
+                Result.failure(BasedClientParseException(json, e))
             }
         }
 }
@@ -59,16 +57,16 @@ fun <T> BasedClient.observe(
     name: String,
     payload: Any?,
     returnType: Class<T>
-): Flow<ParseResult<T>> {
+): Flow<Result<T>> {
     return this.observe(name, payload?.let {
         gson.toJson(payload)
     } ?: "")
         .map { json ->
             try {
-                ParseResult.Success(gson.fromJson(json, returnType))
+                Result.success(gson.fromJson(json, returnType))
             } catch (e: Exception) {
                 e.printStackTrace()
-                ParseResult.Failure(e, json)
+                Result.failure(BasedClientParseException(json, e))
             }
         }
 }
