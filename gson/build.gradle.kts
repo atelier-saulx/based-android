@@ -7,8 +7,6 @@ plugins {
     id("org.jetbrains.dokka") version "1.7.20"
 }
 
-//group = "nl.airhub.based-client"
-//version = "0.1-SNAPSHOT"
 java.sourceCompatibility = JavaVersion.VERSION_11
 java.targetCompatibility = JavaVersion.VERSION_11
 
